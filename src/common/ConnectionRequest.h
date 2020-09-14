@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <string>
+#include <cstring>
 #include "PacketHeaders.h"
 
 class ConnectionRequest {

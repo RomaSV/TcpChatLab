@@ -17,9 +17,13 @@ set(COMMON_SRC
 add_executable(lab1_server ${SERVER_SRC} ${COMMON_SRC})
 if(WIN32)
     target_link_libraries(lab1_server wsock32 ws2_32)
+else()
+    target_link_libraries(lab1_server pthread)
 endif()
 
 add_executable(lab1_client ${CLIENT_SRC} ${COMMON_SRC})
 if(WIN32)
     target_link_libraries(lab1_client wsock32 ws2_32)
+else()
+    target_link_libraries(lab1_client pthread)
 endif()

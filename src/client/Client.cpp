@@ -5,47 +5,61 @@
 #include "Client.h"
 
 Client::Client(const std::string &username) : username(username) {
+#ifdef _WIN32
     WSADATA wsaData;
     if (WSAStartup(0x0202, &wsaData) != 0) {
         std::fprintf(stderr, "ERROR! Where: WSAStartup\n");
         exit(1);
     }
+#endif
 }
 
 Client::~Client() {
+#ifdef _WIN32
     WSACleanup();
+#endif
 }
 
 void Client::connectTo(const std::string &address, uint16_t port) {
 
     sockaddr_in addr{};
+#ifdef _WIN32
     addr.sin_addr.S_un.S_addr = inet_addr(address.c_str());
+#else
+    addr.sin_addr.s_addr = inet_addr(address.c_str());
+#endif
     addr.sin_port = htons(port);
     addr.sin_family = AF_INET;
 
     connectionSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (connectionSocket == INVALID_SOCKET) {
+    if (connectionSocket < 0) {
         std::fprintf(stderr, "ERROR! Where: socket init\n");
         exit(1);
     }
 
-    if (connect(connectionSocket, (const sockaddr *) &addr, sizeof(addr)) == SOCKET_ERROR) {
+    if (connect(connectionSocket, (const sockaddr *) &addr, sizeof(addr)) < 0) {
         std::fprintf(stderr, "ERROR! Where: socket connect\n");
         exit(1);
     }
     handshake();
     loop();
 
+#ifdef _WIN32
     closesocket(connectionSocket);
+#else
+    close(connectionSocket);
+#endif
 }
 
 void Client::handshake() {
-    auto [data, len] = ConnectionRequest(username).serialize();
+    auto[data, len] = ConnectionRequest(username).serialize();
     send(connectionSocket, data, len, 0);
     free(data);
 
-    recv(connectionSocket, buffer, bufferSize, 0);
+    while (buffer[0] != headers::CONNECTION_RESPONSE) {
+        recv(connectionSocket, buffer, bufferSize, 0);
+    }
     ConnectionStatus status = ConnectionResponse(buffer, bufferSize).getStatus();
     if (status == ConnectionStatus::BAD_USERNAME) {
         printf("Sorry, but that name is already taken!\n");
@@ -57,7 +71,7 @@ void Client::handshake() {
 }
 
 void Client::loop() {
-    while(true) {
+    while (true) {
         if (shouldExit) break;
         recv(connectionSocket, buffer, bufferSize, 0);
 

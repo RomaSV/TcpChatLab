@@ -46,6 +46,7 @@ void userInput(Client &client, const std::string &username) {
 }
 
 void printMessage(const ChatMessage &message) {
+#ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
     WORD saved_attributes;
@@ -57,8 +58,11 @@ void printMessage(const ChatMessage &message) {
     if (message.getName() == "Server") {
         SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
     }
+#endif
     std::printf("<%s> %s\n", message.getName().c_str(), message.getMessage().c_str());
 
+#ifdef _WIN32
     /* Restore original attributes */
     SetConsoleTextAttribute(hConsole, saved_attributes);
+#endif
 }
