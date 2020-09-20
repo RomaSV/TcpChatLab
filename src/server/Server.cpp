@@ -138,6 +138,10 @@ void Server::handleClient(socket_t clientSocket) {
                     status = ConnectionStatus::BAD_USERNAME;
                 }
                 sendMessage<ConnectionResponse>(clientSocket, status);
+
+                // A little delay to make sure that connection status will be received first
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
                 if (status != ConnectionStatus::SUCCESS) {
                     return;
                 } else {
@@ -159,6 +163,7 @@ void Server::handleClient(socket_t clientSocket) {
                         sendMessage<ChatMessage>(otherClient, "Server", username + " left the chat. Bye!");
                     }
                 }
+                users.erase(username);
                 return;
             }
             case headers::CHAT_MESSAGE: {

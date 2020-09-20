@@ -36,6 +36,7 @@ class Server {
 
 #ifdef _WIN32
     using socket_t = SOCKET;
+    using socklen_t = int;
 #else
     using socket_t = int;
 #endif
