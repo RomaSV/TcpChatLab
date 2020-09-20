@@ -119,16 +119,42 @@ void Server::userInput() {
     }
 }
 
+
 void Server::handleClient(socket_t clientSocket) {
-    char buffer[bufferSize];
+    char buffer[bufferSize]; // recv buffer with a fixed length
+    std::vector<char> msg; // in case the buffer is too small for a message
     std::string username;
 
     while (true) {
         recv(clientSocket, buffer, bufferSize, 0);
 
-        switch (buffer[0]) {
+        if (buffer[0] == 0) {
+            continue;
+        }
+
+        packetlen_t dataLength;
+        memcpy(&dataLength, buffer + sizeof(headers::header_t), sizeof(packetlen_t));
+
+        if (dataLength < bufferSize) {
+            msg.assign(buffer, buffer + dataLength);
+        } else {
+            msg.assign(buffer, buffer + bufferSize);
+            int bytesToRead = dataLength - bufferSize;
+            while (bytesToRead > 0) {
+                memset(&buffer, 0, bufferSize);
+                recv(clientSocket, buffer, bufferSize, 0);
+                if (bytesToRead < bufferSize) {
+                    msg.insert(msg.end(), buffer, buffer + bytesToRead);
+                } else {
+                    msg.insert(msg.end(), buffer, buffer + bufferSize);
+                }
+                bytesToRead -= bufferSize;
+            }
+        }
+
+        switch (msg[0]) {
             case headers::CONNECTION_REQUEST: {
-                std::string name = ConnectionRequest(buffer).getName();
+                std::string name = ConnectionRequest(msg.data()).getName();
                 ConnectionStatus status;
                 if (users.find(name) == users.end()) {
                     users.insert(name);
@@ -167,7 +193,7 @@ void Server::handleClient(socket_t clientSocket) {
                 return;
             }
             case headers::CHAT_MESSAGE: {
-                auto message = ChatMessage(buffer);
+                auto message = ChatMessage(msg.data());
                 std::printf("<%s> %s\n", message.getName().c_str(), message.getMessage().c_str());
                 for (const auto &[otherClient, thread]: handlerThreads) {
                     if (otherClient != clientSocket) {
@@ -180,7 +206,9 @@ void Server::handleClient(socket_t clientSocket) {
                 break;
         }
         memset(&buffer, 0, bufferSize);
+        msg.clear();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
 }
 
