@@ -6,8 +6,8 @@
 #include <cstring>
 #include "ConnectionResponse.h"
 
-ConnectionResponse::ConnectionResponse(char *data, size_t length) {
-    memcpy(&status, data + sizeof(char), sizeof(status));
+ConnectionResponse::ConnectionResponse(char *data) {
+    memcpy(&status, data + sizeof(headers::header_t) + sizeof(packetlen_t), sizeof(status));
 }
 
 ConnectionResponse::ConnectionResponse(ConnectionStatus status) : status(status) {
@@ -19,9 +19,10 @@ const ConnectionStatus &ConnectionResponse::getStatus() const {
 }
 
 std::pair<char *, size_t> ConnectionResponse::serialize() const {
-    size_t dataLength = sizeof(char) + sizeof(ConnectionStatus);
+    packetlen_t dataLength = sizeof(headers::header_t) + sizeof(packetlen_t) + sizeof(status);
     auto *data = static_cast<char *>(malloc(dataLength));
     data[0] = headers::CONNECTION_RESPONSE;
-    memcpy(data + sizeof(char), &status, sizeof(status));
+    memcpy(data + sizeof(headers::header_t), &dataLength, sizeof(packetlen_t));
+    memcpy(data + sizeof(headers::header_t) + sizeof(packetlen_t), &status, sizeof(status));
     return std::pair<char *, size_t>(data, dataLength);
 }

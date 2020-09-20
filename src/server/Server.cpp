@@ -74,7 +74,7 @@ void Server::loop() {
 
         sockaddr_in client_addr;
         int addrLength = sizeof(sockaddr_in);
-        socket_t clientSocket = accept(listenSocket, (sockaddr *) &client_addr, (socklen_t *)&addrLength);
+        socket_t clientSocket = accept(listenSocket, (sockaddr *) &client_addr, (socklen_t *) &addrLength);
         if (clientSocket != -1) {
             printf("[INFO] New connection\n");
             handlerThreads[clientSocket] = std::thread([=] {
@@ -128,7 +128,7 @@ void Server::handleClient(socket_t clientSocket) {
 
         switch (buffer[0]) {
             case headers::CONNECTION_REQUEST: {
-                std::string name = ConnectionRequest(buffer, bufferSize).getName();
+                std::string name = ConnectionRequest(buffer).getName();
                 ConnectionStatus status;
                 if (users.find(name) == users.end()) {
                     users.insert(name);

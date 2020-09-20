@@ -60,7 +60,7 @@ void Client::handshake() {
     while (buffer[0] != headers::CONNECTION_RESPONSE) {
         recv(connectionSocket, buffer, bufferSize, 0);
     }
-    ConnectionStatus status = ConnectionResponse(buffer, bufferSize).getStatus();
+    ConnectionStatus status = ConnectionResponse(buffer).getStatus();
     if (status == ConnectionStatus::BAD_USERNAME) {
         printf("Sorry, but that name is already taken!\n");
         stop();

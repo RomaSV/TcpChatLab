@@ -7,7 +7,8 @@
 
 
 #include <utility>
-#include <cstddef>
+#include <cstdlib>
+#include <cstring>
 #include "PacketHeaders.h"
 
 class DisconnectionRequest {

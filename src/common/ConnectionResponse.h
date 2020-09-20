@@ -19,7 +19,7 @@ enum class ConnectionStatus {
 class ConnectionResponse {
 
 public:
-    ConnectionResponse(char *data, size_t length);
+    explicit ConnectionResponse(char *data);
 
     explicit ConnectionResponse(ConnectionStatus status);
 

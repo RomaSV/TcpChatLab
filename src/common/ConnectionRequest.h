@@ -14,7 +14,7 @@
 class ConnectionRequest {
 
 public:
-    ConnectionRequest(char *data, size_t length);
+    explicit ConnectionRequest(char *data);
 
     explicit ConnectionRequest(std::string name);
 
